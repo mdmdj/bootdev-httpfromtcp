@@ -64,7 +64,7 @@ func (r *Request) parse(data []byte) (bytesConsumed int, err error) {
 }
 
 func RequestFromReader(reader io.Reader) (request *Request, err error) {
-	buf := make([]byte, bufferSize, bufferSize)
+	buf := make([]byte, bufferSize)
 	readToIndex := 0
 	//parsedToIndex := 0
 
@@ -73,7 +73,7 @@ func RequestFromReader(reader io.Reader) (request *Request, err error) {
 
 	for request.State != Done {
 		if readToIndex >= cap(buf) {
-			newbuf := make([]byte, cap(buf)*2, cap(buf)*2)
+			newbuf := make([]byte, cap(buf)*2)
 			copy(newbuf, buf)
 			buf = newbuf
 		}
@@ -89,7 +89,7 @@ func RequestFromReader(reader io.Reader) (request *Request, err error) {
 			continue
 		}
 
-		readToIndex += bytesRead 
+		readToIndex += bytesRead
 
 		var bytesParsed int
 		bytesParsed, err = request.parse(buf[:readToIndex])
@@ -102,7 +102,6 @@ func RequestFromReader(reader io.Reader) (request *Request, err error) {
 
 		readToIndex -= bytesParsed
 
-		
 		if errors.Is(err, io.EOF) {
 			request.State = Done
 			break

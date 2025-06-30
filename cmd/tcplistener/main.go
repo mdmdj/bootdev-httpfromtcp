@@ -2,21 +2,14 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"os"
-	"strings"
+
+	"github.com/mdmdj/bootdev-httpfromtcp/internal/request"
 )
 
-func getLinesChannel(f io.ReadCloser) <-chan string {
-	outChan := make(chan string)
-
-	go readLines(f, outChan)
-
-	return outChan
-}
-
+/*
 func readLines(f io.ReadCloser, outChan chan string) {
 	defer close(outChan)
 
@@ -51,7 +44,7 @@ func readLines(f io.ReadCloser, outChan chan string) {
 		outChan <- currentLine.String()
 	}
 
-}
+} */
 
 func main() {
 	//file, err := os.Open("messages.txt")
@@ -76,11 +69,23 @@ func main() {
 
 		log.Println("Connection accepted")
 
-		linesChannel := getLinesChannel(conn)
-
-		for line := range linesChannel {
-			fmt.Println(line)
+		request, err := request.RequestFromReader(conn)
+		if err != nil {
+			log.Println("Error reading request")
+			log.Println(err.Error())
+			continue
 		}
+
+		rl := request.RequestLine
+		if rl.Method == "" {
+			log.Println("Error reading request line:", rl)
+			continue
+		}
+
+		fmt.Println("Request line:")
+		fmt.Printf("- Method: %s\n", rl.Method)
+		fmt.Printf("- Target: %s\n", rl.RequestTarget)
+		fmt.Printf("- Version: %s\n", rl.HttpVersion)
 
 		fmt.Println("Connection closed")
 	}
